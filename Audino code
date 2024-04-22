@@ -1,0 +1,145 @@
+#include <Servo.h>
+
+// Define servo objects for each servo motor
+Servo waistServo;
+Servo shoulderServo;
+Servo elbowServo;
+Servo wristRollServo;
+Servo wristPitchServo;
+Servo gripperServo;
+
+// Define pins for each servo motor
+int waistPin = 2;
+int shoulderPin = 3;
+int elbowPin = 4;
+int wristRollPin = 5;
+int wristPitchPin = 6;
+int gripperPin = 7;
+
+// Define serial communication variables
+char color;
+boolean objectDetected = false;
+
+// Define initial positions for each servo motor
+int initialWaistPos = 0;
+int initialShoulderPos = 45;
+int initialElbowPos =120;
+int initialWristRollPos = 0;
+int initialWristPitchPos = 155;
+int initialGripperPos =180;
+
+
+void setup() {
+  // Initialize serial communication
+  Serial.begin(9600);
+
+  // Attach each servo to its corresponding pin
+  waistServo.attach(waistPin);
+  shoulderServo.attach(shoulderPin);
+  elbowServo.attach(elbowPin);
+  wristRollServo.attach(wristRollPin);
+  wristPitchServo.attach(wristPitchPin);
+  gripperServo.attach(gripperPin);
+
+  // Move each servo to its initial position
+  moveServoToPosition(waistServo, initialWaistPos);
+  moveServoToPosition(shoulderServo, initialShoulderPos);
+  moveServoToPosition(elbowServo, initialElbowPos);
+  moveServoToPosition(wristRollServo, initialWristRollPos);
+  moveServoToPosition(wristPitchServo, initialWristPitchPos);
+  moveServoToPosition(gripperServo, initialGripperPos);
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    // Read the color information from serial
+    color = Serial.read();
+
+    // Move the robotic arm based on the received color information
+    if (color == 'R') {
+      delay(500);
+       moveServoToPosition(gripperServo, 100);
+       delay(500);
+     
+      moveServoToPosition(shoulderServo, 45);
+      moveServoToPosition(elbowServo, 0);
+      moveServoToPosition(wristRollServo, 60);
+      moveServoToPosition(wristPitchServo, 135);
+      moveServoToPosition(gripperServo, 100);
+      delay(500);
+      moveServoToPosition(waistServo,45 );
+       delay(500);
+      moveServoToPosition(waistServo, 45);
+      moveServoToPosition(shoulderServo, 45);
+      moveServoToPosition(elbowServo, 100);
+      moveServoToPosition(wristRollServo, 0);
+      moveServoToPosition(wristPitchServo, 135);
+      moveServoToPosition(gripperServo, 180);
+      objectDetected = true;
+    } else if (color == 'G') {
+       delay(500);
+       moveServoToPosition(gripperServo, 100);
+       delay(500);
+     
+      moveServoToPosition(shoulderServo, 45);
+      moveServoToPosition(elbowServo, 0);
+      moveServoToPosition(wristRollServo, 60);
+      moveServoToPosition(wristPitchServo, 135);
+      moveServoToPosition(gripperServo, 100);
+      delay(500);
+      moveServoToPosition(waistServo,180 );
+       delay(500);
+       
+      moveServoToPosition(waistServo, 180);
+      moveServoToPosition(shoulderServo, 45);
+      moveServoToPosition(elbowServo, 100);
+      moveServoToPosition(wristRollServo, 0);
+      moveServoToPosition(wristPitchServo, 135);
+      moveServoToPosition(gripperServo, 180);
+      objectDetected = true;
+    } else if (color == 'B') {
+       delay(500);
+       moveServoToPosition(gripperServo, 100);
+       delay(500);
+      
+      moveServoToPosition(shoulderServo, 45);
+      moveServoToPosition(elbowServo, 0);
+      moveServoToPosition(wristRollServo, 60);
+      moveServoToPosition(wristPitchServo, 135);
+      moveServoToPosition(gripperServo, 100);
+      delay(500);
+      moveServoToPosition(waistServo,90 );
+       delay(500);
+     moveServoToPosition(waistServo, 90);
+      moveServoToPosition(shoulderServo, 45);
+      moveServoToPosition(elbowServo, 100);
+      moveServoToPosition(wristRollServo, 0);
+      moveServoToPosition(wristPitchServo, 135);
+      moveServoToPosition(gripperServo, 180);
+      objectDetected = true;
+    }
+
+    // Check if an object has been detected and return to initial position
+    if (objectDetected) {
+      delay(1000); // Delay for stability and object placement
+      returnToInitialPosition();
+      objectDetected = false;
+    }
+  }
+}
+
+void moveServoToPosition(Servo servo, int position) {
+  // Move the servo to the specified position
+  servo.write(position);
+  delay(500); // Adjust delay as needed based on servo speed and stability
+}
+
+void returnToInitialPosition() {
+  // Move each servo back to its initial position
+  moveServoToPosition(waistServo, initialWaistPos);
+  moveServoToPosition(shoulderServo, initialShoulderPos);
+  moveServoToPosition(elbowServo, initialElbowPos);
+  moveServoToPosition(wristRollServo, initialWristRollPos);
+  moveServoToPosition(wristPitchServo, initialWristPitchPos);
+  moveServoToPosition(gripperServo, initialGripperPos);
+}
