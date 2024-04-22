@@ -1,0 +1,82 @@
+import cv2
+import numpy as np
+import serial
+
+# Initialize serial communication with Arduino
+arduino = serial.Serial('COM3', 9600)  # Replace 'COM3' with the appropriate COM port
+
+def detect_color(frame):
+    # Convert frame to HSV color space
+    hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+    # Define range of red color in HSV
+    lower_red = np.array([0, 100, 100])
+    upper_red = np.array([10, 255, 255])
+
+    # Define range of blue color in HSV
+    lower_blue = np.array([110, 50, 50])
+    upper_blue = np.array([130, 255, 255])
+
+    # Define range of green color in HSV
+    lower_green = np.array([50, 100, 100])
+    upper_green = np.array([70, 255, 255])
+
+    # Threshold the HSV image to get only red, blue, and green colors
+    mask_red = cv2.inRange(hsv_frame, lower_red, upper_red)
+    mask_blue = cv2.inRange(hsv_frame, lower_blue, upper_blue)
+    mask_green = cv2.inRange(hsv_frame, lower_green, upper_green)
+
+    # Bitwise-OR the masks to get the combined mask
+    mask_combined = cv2.bitwise_or(mask_red, cv2.bitwise_or(mask_blue, mask_green))
+
+    # Find contours in the combined mask
+    contours, _ = cv2.findContours(mask_combined, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Initialize color label
+    color_label = None
+
+    # Check if any contour is detected
+    if len(contours) > 0:
+        # Get the largest contour
+        largest_contour = max(contours, key=cv2.contourArea)
+
+        # Get the bounding rectangle of the largest contour
+        x, y, w, h = cv2.boundingRect(largest_contour)
+
+        # Get the centroid of the largest contour
+        centroid_x = x + (w // 2)
+        centroid_y = y + (h // 2)
+
+        # Determine the color label based on the centroid position
+        if mask_red[centroid_y, centroid_x] > 0:
+            color_label = 'R'
+        elif mask_blue[centroid_y, centroid_x] > 0:
+            color_label = 'B'
+        elif mask_green[centroid_y, centroid_x] > 0:
+            color_label = 'G'
+
+    return color_label
+
+# Initialize webcam
+cap = cv2.VideoCapture(0)
+
+while True:
+    ret, frame = cap.read()
+
+    # Perform color detection
+    color_label = detect_color(frame)
+
+    # Display the frame with color label
+    if color_label is not None:
+        cv2.putText(frame, color_label, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.imshow('Color Detection', frame)
+
+        # Send color information to Arduino
+        arduino.write(color_label.encode())
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# Release resources
+cap.release()
+cv2.destroyAllWindows()
